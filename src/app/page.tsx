@@ -1,5 +1,3 @@
-import AddTodo, { AddTodoHandle } from '@/components/todo/add-todo';
-import TodoList from '@/components/todo/todo-list';
 import Link from 'next/link';
 
 export interface Todo {

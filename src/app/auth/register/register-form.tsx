@@ -14,8 +14,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RegisterBody, RegisterBodyType } from "@/schema-validation/register-body";
-
+import {
+  RegisterBody,
+  RegisterBodyType,
+} from "@/schema-validation/register-body";
+import envConfig from "@/config";
 
 export default function RegisterForm() {
   const form = useForm<RegisterBodyType>({
@@ -24,22 +27,35 @@ export default function RegisterForm() {
       name: "",
       email: "",
       password: "",
-      confirm_password: "",
+      confirmPassword: "",
     },
   });
 
   // 2. Define a submit handler.
-  function onSubmit(values: RegisterBodyType) {
+  async function onSubmit(values: RegisterBodyType) {
+    const result = await fetch(
+      `${envConfig.NEXT_PUBLIC_API_DOMAIN}/auth/register`,
+      {
+        method: "POST",
+        body: JSON.stringify(values),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((res) => res.json());
+    console.log(result);
     console.log(values);
     console.log(process.env.NEXT_PUBLIC_API_DOMAIN);
-    
   }
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit, error => {
-          console.error(error)
-        })} className="space-y-4 w-full max-w-[600px]">
+        <form
+          onSubmit={form.handleSubmit(onSubmit, (error) => {
+            console.error(error);
+          })}
+          className="space-y-4 w-full max-w-[600px]"
+        >
           <FormField
             control={form.control}
             name="name"
@@ -90,21 +106,25 @@ export default function RegisterForm() {
           />
           <FormField
             control={form.control}
-            name="confirm_password"
+            name="confirmPassword"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Confirm Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="Confirm password" {...field} />
+                  <Input
+                    type="password"
+                    placeholder="Confirm password"
+                    {...field}
+                  />
                 </FormControl>
-                <FormDescription>
-                  Confirm your password here
-                </FormDescription>
+                <FormDescription>Confirm your password here</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" className="mt-8">Submit</Button>
+          <Button type="submit" className="mt-8">
+            Submit
+          </Button>
         </form>
       </Form>
     </>

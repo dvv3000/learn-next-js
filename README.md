@@ -13,4 +13,5 @@
     - Tải font về  và để vào trong thư mục src
     - Docs: https://nextjs.org/docs/app/building-your-application/optimizing/fonts#local-fonts
 
-## 
+## Middleware
+1. Do Nextjs quản lý cả các trang ở client và ở server. Đối với các trang không cần authen thì không sao nhưng với các trang cần authen thì làm sao để Nextjs quản lý được chúng = Sử dụng Middleware
