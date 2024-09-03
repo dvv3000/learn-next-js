@@ -5,8 +5,10 @@ import clsx from "clsx";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/header";
 import { Toaster } from "@/components/ui/toaster";
+import AppProvider from "@/app/AppProvider";
+import { cookies } from "next/headers";
 
-const inter = Inter({ subsets: ["vietnamese"]});
+const inter = Inter({ subsets: ["vietnamese"] });
 
 export const metadata: Metadata = {
   title: "Todo App",
@@ -18,6 +20,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = cookies();
+  const token = cookieStore.get("sessionToken")?.value;
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={clsx(inter.className)}>
@@ -28,7 +32,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Header />
-          {children}
+          <AppProvider intialSessionToken={token}>{children}</AppProvider>
           <Toaster />
         </ThemeProvider>
       </body>

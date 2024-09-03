@@ -2,7 +2,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -18,7 +17,10 @@ import {
   RegisterBody,
   RegisterBodyType,
 } from "@/schema-validation/register-body";
-import envConfig from "@/config";
+import authRequest from "@/app/apiRequests/auth";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/hooks/use-toast";
+import { sessionToken } from "@/lib/http";
 
 export default function RegisterForm() {
   const form = useForm<RegisterBodyType>({
@@ -31,21 +33,29 @@ export default function RegisterForm() {
     },
   });
 
+  const router = useRouter();
+  const { toast } = useToast();
+
   // 2. Define a submit handler.
   async function onSubmit(values: RegisterBodyType) {
-    const result = await fetch(
-      `${envConfig.NEXT_PUBLIC_API_DOMAIN}/auth/register`,
-      {
-        method: "POST",
-        body: JSON.stringify(values),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    ).then((res) => res.json());
-    console.log(result);
-    console.log(values);
-    console.log(process.env.NEXT_PUBLIC_API_DOMAIN);
+    try {
+      const result = await authRequest.register(values);
+      toast({
+        title: "Thông báo",
+        description: result.payload.message,
+        variant: "success",
+      });
+      await authRequest.auth({
+        token: result.payload.data.token,
+      });
+      sessionToken.value = result.payload.data.token
+      router.push("/me");
+    } catch (error: any) {
+      handleErrorApi({
+        error,
+        setError: form.setError,
+      })
+    }
   }
   return (
     <>

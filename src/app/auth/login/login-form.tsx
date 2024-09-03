@@ -1,12 +1,11 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -14,9 +13,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/hooks/use-toast";
-
 import { LoginBody, LoginBodyType } from "@/schema-validation/login-body";
-import envConfig from "@/config";
+import authRequest from "@/app/apiRequests/auth";
+import { useRouter } from "next/navigation";
+import { sessionToken } from "@/lib/http";
+import { handleErrorApi } from "@/lib/utils";
 
 export default function LoginForm() {
   const form = useForm<LoginBodyType>({
@@ -27,56 +28,32 @@ export default function LoginForm() {
     },
   });
 
+  const router = useRouter();
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false)
 
   // 2. Define a submit handler.
   async function onSubmit(values: LoginBodyType) {
+    setLoading(true)
     try {
-      const result = await fetch(
-        `${envConfig.NEXT_PUBLIC_API_DOMAIN}/auth/login`,
-        {
-          method: "POST",
-          body: JSON.stringify(values),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      ).then(async (res) => {
-        const payload = await res.json();
-        const data = {
-          status: res.status,
-          payload: payload,
-        };
-        if (!res.ok) {
-          throw data;
-        }
-        return data;
-      });
+      const result = await authRequest.login(values);
       toast({
         title: "Thông báo",
         description: result.payload.message,
         variant: "success",
-      })
+      });
+      await authRequest.auth({
+        token: result.payload.data.token,
+      });
+      sessionToken.value = result.payload.data.token
+      router.push("/me");
     } catch (error: any) {
-      const errors = error.payload.errors as {
-        field: string;
-        message: string;
-      }[];
-
-      const status = error.status as number;
-      if (status === 422) {
-        errors.forEach((error) => {
-          form.setError(error.field as keyof LoginBodyType, {
-            type: "server",
-            message: error.message,
-          });
-        });
-      }
-      toast({
-        title: "Error",
-        description: error.payload.message,
-        variant: "destructive",
+      handleErrorApi({
+        error,
+        setError: form.setError,
       })
+    } finally {
+      setLoading(false)
     }
   }
   return (
@@ -114,7 +91,7 @@ export default function LoginForm() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="mt-8">
+          <Button type="submit" className="mt-8" disabled={loading}>
             Submit
           </Button>
         </form>
