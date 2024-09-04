@@ -29,3 +29,13 @@ export const handleErrorApi = ({error, setError, toastDuration}: {
     duration: toastDuration || 2000
   })
 }
+
+/**
+ * Tự động thêm dấu "/" vào path
+ */
+export const normalizePath = (path: string) => {
+  if (path.startsWith('/')) {
+    return path
+  }
+  return `/${path}`
+}

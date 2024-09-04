@@ -1,4 +1,5 @@
 import http from "@/lib/http";
+import { MessageResType } from "@/schema-validation/common.schema";
 import {
   LoginBodyType,
   LoginResponseType,
@@ -20,6 +21,24 @@ const authRequest = {
       baseUrl: "",
     });
   },
+
+  /**
+   * Clear token in server, call from next server to server 
+   * @param token 
+   * @returns 
+   */
+  logoutFromNextServerToServer: (token: string) => {
+    return http.post<MessageResType>("/auth/logout", {}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      }
+    })
+  }, 
+  logoutFromClientToNextServer: () => {
+    return http.post<MessageResType>("/api/auth/logout", {}, {
+      baseUrl: "",
+    })
+  }
 };
 
 export default authRequest;

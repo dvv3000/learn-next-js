@@ -1,5 +1,3 @@
-import { cookies } from 'next/headers'
-
 export async function POST(request: Request) {
   const res = await request.json();
   const token = res.token

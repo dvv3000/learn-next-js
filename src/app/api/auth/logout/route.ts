@@ -1,0 +1,40 @@
+import authRequest from "@/app/apiRequests/auth";
+import { HttpError } from "@/lib/http";
+import { cookies } from "next/headers";
+
+export async function POST(request: Request) {
+  const cookiesStore = cookies();
+  const token = cookiesStore.get("sessionToken")?.value;
+  if (!token) {
+    return Response.json(
+      { message: "Không nhận được session token" },
+      {
+        status: 401,
+      }
+    );
+  }
+  try {
+    const result = await authRequest.logoutFromNextServerToServer(token);
+    cookiesStore.delete("sessionToken");
+
+    return Response.json(result.payload, {
+      status: 200,
+      headers: {
+        "Set-Cookie": `sessionToken=; Path=/; HttpOnly; Secure; SameSite=strict`,
+      },
+    });
+  } catch (error) {
+    if (error instanceof HttpError) {
+      return Response.json(error.payload, {
+        status: error.status,
+      });
+    } else {
+      return Response.json(
+        { message: "Có lỗi xảy ra" },
+        {
+          status: 500,
+        }
+      );
+    }
+  }
+}
