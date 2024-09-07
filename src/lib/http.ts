@@ -1,5 +1,5 @@
 import envConfig from "@/config";
-import { log } from "console";
+import { redirect } from "next/navigation";
 
 type CustomRequestOptions = RequestInit & {
   baseUrl?: string | undefined;
@@ -84,12 +84,28 @@ const request = async <Response>(
     status: res.status,
     payload,
   };
-  
+
   if (!res.ok) {
     if (res.status === ENTITY_ERROR_STATUS) {
       throw new EntityError(data.payload as EntityErrorPayload);
+    } else if (res.status === AUTHENTICATION_ERROR_STATUS) {
+      if (typeof window !== "undefined") {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          body: JSON.stringify({ force: true }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        sessionToken.value = "";
+        location.href = "/auth/login";
+      } else {
+        const token = (options?.headers as any)?.Authorization?.split(" ")[1];
+        redirect(`/auth/logout?token=${token}`);
+      }
+    } else {
+      throw new HttpError(data.status, data.payload);
     }
-    throw new HttpError(data.status, data.payload);
   }
 
   return data;
